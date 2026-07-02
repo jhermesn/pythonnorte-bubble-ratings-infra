@@ -231,9 +231,17 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
     effect = "Allow"
     actions = [
       "ssm:PutParameter", "ssm:GetParameter", "ssm:GetParameters", "ssm:DeleteParameter",
-      "ssm:AddTagsToResource", "ssm:ListTagsForResource", "ssm:DescribeParameters",
+      "ssm:AddTagsToResource", "ssm:ListTagsForResource",
     ]
     resources = ["arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/*"]
+  }
+
+  # ssm:DescribeParameters is a search/filter action, not scoped by resource ARN.
+  statement {
+    sid       = "SsmDescribeParameters"
+    effect    = "Allow"
+    actions   = ["ssm:DescribeParameters"]
+    resources = ["*"]
   }
 }
 
