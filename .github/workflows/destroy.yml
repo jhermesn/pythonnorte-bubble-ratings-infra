@@ -1,0 +1,54 @@
+name: Destroy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "destroy" to confirm tearing down all infrastructure'
+        required: true
+
+concurrency:
+  group: pythonnorte-bubble-ratings-terraform-state # shared with provision.yml, same state
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  TF_VERSION: "1.15.7"
+  AWS_REGION: "us-east-1"
+
+jobs:
+  destroy:
+    name: Terraform destroy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for OIDC federation to AWS
+
+    steps:
+      - name: Verify confirmation
+        if: github.event.inputs.confirm != 'destroy'
+        run: |
+          echo "Confirmation input must be exactly 'destroy'. Aborting."
+          exit 1
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e  # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b  # v6.2.1
+        with:
+          role-to-assume: ${{ secrets.AWS_INFRA_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform destroy
+        run: terraform destroy -input=false -auto-approve
