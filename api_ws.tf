@@ -15,6 +15,11 @@ module "ws_api" {
     logging_level = "OFF"
   }
 
+  # Not needed for a demo app; avoids the separate CloudWatch resource
+  # policy access logging requires (distinct from the account-level
+  # execution-logging role).
+  stage_access_log_settings = null
+
   routes = {
     "$connect" = {
       integration = {

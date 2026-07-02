@@ -8,6 +8,11 @@ module "http_api" {
 
   create_domain_name = false
 
+  # Not needed for a demo app; avoids the separate CloudWatch resource
+  # policy access logging requires (distinct from the account-level
+  # execution-logging role).
+  stage_access_log_settings = null
+
   cors_configuration = {
     allow_headers = ["content-type"]
     allow_methods = ["GET", "POST", "OPTIONS"]
