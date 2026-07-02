@@ -124,7 +124,8 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
     actions = [
       "lambda:CreateEventSourceMapping", "lambda:DeleteEventSourceMapping",
       "lambda:GetEventSourceMapping", "lambda:UpdateEventSourceMapping",
-      "lambda:ListEventSourceMappings",
+      "lambda:ListEventSourceMappings", "lambda:TagResource",
+      "lambda:UntagResource", "lambda:ListTags",
     ]
     resources = ["*"]
   }
@@ -169,11 +170,15 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
   }
 
   # logs:DescribeLogGroups is a list operation; CloudWatch Logs doesn't scope
-  # it by log group name, so it needs Resource:*.
+  # it by log group name, so it needs Resource:*. Same for log delivery,
+  # which API Gateway stage access-log setup goes through internally.
   statement {
-    sid       = "LogGroupsDescribe"
-    effect    = "Allow"
-    actions   = ["logs:DescribeLogGroups"]
+    sid    = "LogGroupsDescribe"
+    effect = "Allow"
+    actions = [
+      "logs:DescribeLogGroups", "logs:CreateLogDelivery", "logs:GetLogDelivery",
+      "logs:UpdateLogDelivery", "logs:DeleteLogDelivery", "logs:ListLogDeliveries",
+    ]
     resources = ["*"]
   }
 
@@ -328,4 +333,35 @@ resource "aws_iam_role_policy" "app_deploy" {
   name   = "${var.project_name}-app-deploy-policy"
   role   = aws_iam_role.app_deploy.id
   policy = data.aws_iam_policy_document.app_deploy_permissions.json
+}
+
+# --- API Gateway account-level CloudWatch logging ---
+# Account-wide, one-time setting shared by every API Gateway API (REST and
+# HTTP/WebSocket) in this account/region; API Gateway can't push access/
+# execution logs to CloudWatch until this role is configured.
+
+data "aws_iam_policy_document" "apigateway_cloudwatch_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "apigateway_cloudwatch" {
+  name               = "${var.project_name}-apigateway-cloudwatch"
+  assume_role_policy = data.aws_iam_policy_document.apigateway_cloudwatch_assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "apigateway_cloudwatch" {
+  role       = aws_iam_role.apigateway_cloudwatch.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+}
+
+resource "aws_api_gateway_account" "this" {
+  cloudwatch_role_arn = aws_iam_role.apigateway_cloudwatch.arn
 }
