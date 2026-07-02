@@ -65,7 +65,6 @@ jobs:
             echo "|---|---|"
             echo "| Frontend URL | $(terraform output -raw frontend_url) |"
             echo "| HTTP API URL | $(terraform output -raw http_api_url) |"
-            echo "| WebSocket API URL | $(terraform output -raw ws_api_url) |"
             echo ""
             echo "Resource identifiers were published to SSM Parameter Store under"
             echo "\`/pythonnorte-bubble-ratings/*\`, and the **pythonnorte-bubble-ratings-app**"

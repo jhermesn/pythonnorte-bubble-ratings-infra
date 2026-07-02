@@ -116,20 +116,6 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
     resources = ["arn:aws:lambda:*:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-*"]
   }
 
-  # Event source mapping actions apply to the mapping's own ARN (a UUID
-  # assigned at creation), not the function's, so they can't be pre-scoped.
-  statement {
-    sid    = "LambdaEventSourceMappings"
-    effect = "Allow"
-    actions = [
-      "lambda:CreateEventSourceMapping", "lambda:DeleteEventSourceMapping",
-      "lambda:GetEventSourceMapping", "lambda:UpdateEventSourceMapping",
-      "lambda:ListEventSourceMappings", "lambda:TagResource",
-      "lambda:UntagResource", "lambda:ListTags",
-    ]
-    resources = ["*"]
-  }
-
   statement {
     sid    = "LambdaExecutionRoles"
     effect = "Allow"

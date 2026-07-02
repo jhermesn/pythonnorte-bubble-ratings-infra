@@ -26,32 +26,8 @@ resource "aws_ssm_parameter" "http_api_url" {
   value = module.http_api.api_endpoint
 }
 
-resource "aws_ssm_parameter" "ws_api_url" {
-  name  = "${local.ssm_prefix}/ws_api_url"
-  type  = "String"
-  value = module.ws_api.api_endpoint
-}
-
 resource "aws_ssm_parameter" "lambda_http_api_function_name" {
   name  = "${local.ssm_prefix}/lambda/http_api_function_name"
   type  = "String"
   value = module.lambda_http_api.lambda_function_name
-}
-
-resource "aws_ssm_parameter" "lambda_ws_connect_function_name" {
-  name  = "${local.ssm_prefix}/lambda/ws_connect_function_name"
-  type  = "String"
-  value = module.lambda_ws_connect.lambda_function_name
-}
-
-resource "aws_ssm_parameter" "lambda_ws_disconnect_function_name" {
-  name  = "${local.ssm_prefix}/lambda/ws_disconnect_function_name"
-  type  = "String"
-  value = module.lambda_ws_disconnect.lambda_function_name
-}
-
-resource "aws_ssm_parameter" "lambda_broadcast_function_name" {
-  name  = "${local.ssm_prefix}/lambda/broadcast_function_name"
-  type  = "String"
-  value = module.lambda_broadcast.lambda_function_name
 }
