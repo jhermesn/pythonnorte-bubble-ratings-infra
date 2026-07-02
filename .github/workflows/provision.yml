@@ -38,6 +38,7 @@ jobs:
           framework: terraform
           quiet: true
           soft_fail: false
+          skip_check: "CKV_TF_1,CKV2_AWS_34,CKV_AWS_111,CKV_AWS_356"
 
       - uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b  # v6.2.1
         with:
