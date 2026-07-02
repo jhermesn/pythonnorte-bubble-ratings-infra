@@ -124,7 +124,7 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
       "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy",
       "iam:AttachRolePolicy", "iam:DetachRolePolicy",
       "iam:ListRolePolicies", "iam:ListAttachedRolePolicies",
-      "iam:TagRole", "iam:UntagRole",
+      "iam:TagRole", "iam:UntagRole", "iam:ListInstanceProfilesForRole",
     ]
     resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-*"]
   }
