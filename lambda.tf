@@ -17,7 +17,7 @@ module "lambda_http_api" {
   architectures = local.lambda_architecture
   timeout       = 10
 
-  source_path             = "${path.module}/placeholder_src/http_api"
+  source_path             = "${path.module}/placeholder_src"
   ignore_source_code_hash = true
 
   environment_variables = {
@@ -49,6 +49,11 @@ module "lambda_ws_connect" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "~> 8.8.0"
 
+  # All 4 lambda modules build from the same placeholder_src, so they'd
+  # compute the same local zip file; serialized to avoid a build race on
+  # that shared temp file when Terraform applies them in parallel.
+  depends_on = [module.lambda_http_api]
+
   function_name = "${var.project_name}-ws-connect"
   description   = "Registers a new WebSocket connection ($connect route)"
   handler       = "handlers.ws_connect.handler"
@@ -56,7 +61,7 @@ module "lambda_ws_connect" {
   architectures = local.lambda_architecture
   timeout       = 10
 
-  source_path             = "${path.module}/placeholder_src/ws_connect"
+  source_path             = "${path.module}/placeholder_src"
   ignore_source_code_hash = true
 
   environment_variables = {
@@ -86,6 +91,8 @@ module "lambda_ws_disconnect" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "~> 8.8.0"
 
+  depends_on = [module.lambda_ws_connect]
+
   function_name = "${var.project_name}-ws-disconnect"
   description   = "Removes a WebSocket connection ($disconnect route)"
   handler       = "handlers.ws_disconnect.handler"
@@ -93,7 +100,7 @@ module "lambda_ws_disconnect" {
   architectures = local.lambda_architecture
   timeout       = 10
 
-  source_path             = "${path.module}/placeholder_src/ws_disconnect"
+  source_path             = "${path.module}/placeholder_src"
   ignore_source_code_hash = true
 
   environment_variables = {
@@ -123,6 +130,8 @@ module "lambda_broadcast" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "~> 8.8.0"
 
+  depends_on = [module.lambda_ws_disconnect]
+
   function_name = "${var.project_name}-broadcast"
   description   = "Broadcasts new comments to all connected WebSocket clients (DynamoDB Stream trigger)"
   handler       = "handlers.broadcast.handler"
@@ -130,7 +139,7 @@ module "lambda_broadcast" {
   architectures = local.lambda_architecture
   timeout       = 30
 
-  source_path             = "${path.module}/placeholder_src/broadcast"
+  source_path             = "${path.module}/placeholder_src"
   ignore_source_code_hash = true
 
   environment_variables = {
