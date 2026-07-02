@@ -49,6 +49,11 @@ data "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
 }
 
+# AWS-owned default key DynamoDB SSE resolves to when no customer key is given.
+data "aws_kms_key" "dynamodb_default" {
+  key_id = "alias/aws/dynamodb"
+}
+
 data "aws_iam_policy_document" "infra_deploy_assume" {
   statement {
     effect  = "Allow"
@@ -140,14 +145,49 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
   }
 
   statement {
-    sid    = "LambdaLogGroups"
+    sid    = "LogGroupsManage"
     effect = "Allow"
     actions = [
       "logs:CreateLogGroup", "logs:DeleteLogGroup", "logs:PutRetentionPolicy",
       "logs:TagResource", "logs:UntagResource", "logs:ListTagsForResource",
-      "logs:DescribeLogGroups",
     ]
-    resources = ["arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.project_name}-*"]
+    resources = [
+      "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.project_name}-*",
+      "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/apigateway/${var.project_name}-*",
+    ]
+  }
+
+  # logs:DescribeLogGroups is a list operation; CloudWatch Logs doesn't scope
+  # it by log group name, so it needs Resource:*.
+  statement {
+    sid       = "LogGroupsDescribe"
+    effect    = "Allow"
+    actions   = ["logs:DescribeLogGroups"]
+    resources = ["*"]
+  }
+
+  # One-time per-account: API Gateway needs its service-linked role to exist
+  # before it can push access logs to CloudWatch. Scoped to that exact role
+  # and to requests originating from apigateway itself.
+  statement {
+    sid       = "ApiGatewayServiceLinkedRole"
+    effect    = "Allow"
+    actions   = ["iam:CreateServiceLinkedRole"]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ops.apigateway.amazonaws.com/AWSServiceRoleForAPIGateway"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:AWSServiceName"
+      values   = ["ops.apigateway.amazonaws.com"]
+    }
+  }
+
+  # DynamoDB SSE with the AWS-owned default key still requires resolving it.
+  statement {
+    sid       = "DynamoDbDefaultKmsKey"
+    effect    = "Allow"
+    actions   = ["kms:DescribeKey"]
+    resources = [data.aws_kms_key.dynamodb_default.arn]
   }
 
   statement {
@@ -191,7 +231,7 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
     effect = "Allow"
     actions = [
       "ssm:PutParameter", "ssm:GetParameter", "ssm:GetParameters", "ssm:DeleteParameter",
-      "ssm:AddTagsToResource", "ssm:ListTagsForResource",
+      "ssm:AddTagsToResource", "ssm:ListTagsForResource", "ssm:DescribeParameters",
     ]
     resources = ["arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/*"]
   }
