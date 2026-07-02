@@ -17,7 +17,7 @@ module "lambda_http_api" {
   architectures = local.lambda_architecture
   timeout       = 10
 
-  source_path             = "${path.module}/placeholder_src"
+  source_path             = "${path.module}/placeholder_src/http_api"
   ignore_source_code_hash = true
 
   environment_variables = {
@@ -56,7 +56,7 @@ module "lambda_ws_connect" {
   architectures = local.lambda_architecture
   timeout       = 10
 
-  source_path             = "${path.module}/placeholder_src"
+  source_path             = "${path.module}/placeholder_src/ws_connect"
   ignore_source_code_hash = true
 
   environment_variables = {
@@ -93,7 +93,7 @@ module "lambda_ws_disconnect" {
   architectures = local.lambda_architecture
   timeout       = 10
 
-  source_path             = "${path.module}/placeholder_src"
+  source_path             = "${path.module}/placeholder_src/ws_disconnect"
   ignore_source_code_hash = true
 
   environment_variables = {
@@ -130,7 +130,7 @@ module "lambda_broadcast" {
   architectures = local.lambda_architecture
   timeout       = 30
 
-  source_path             = "${path.module}/placeholder_src"
+  source_path             = "${path.module}/placeholder_src/broadcast"
   ignore_source_code_hash = true
 
   environment_variables = {
