@@ -307,10 +307,19 @@ data "aws_iam_policy_document" "app_deploy_permissions" {
     resources = ["arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/*"]
   }
 
+  # UpdateFunctionConfiguration: aws-lambda-deploy diffs live config against
+  # our handler/runtime inputs on every run and calls this even when the
+  # values already match Terraform's, so it can't be scoped out without
+  # breaking normal deploys. What it writes always matches what Terraform
+  # already set (same handler/runtime we pass here), so it's a no-op in
+  # practice, not a real config-drift vector.
   statement {
-    sid       = "DeployLambdaCode"
-    effect    = "Allow"
-    actions   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:GetFunctionConfiguration"]
+    sid    = "DeployLambdaCode"
+    effect = "Allow"
+    actions = [
+      "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
+      "lambda:GetFunction", "lambda:GetFunctionConfiguration",
+    ]
     resources = ["arn:aws:lambda:*:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-*"]
   }
 
