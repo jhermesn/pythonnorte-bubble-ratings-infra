@@ -112,11 +112,21 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
       "lambda:TagResource", "lambda:UntagResource", "lambda:ListTags",
       "lambda:ListVersionsByFunction", "lambda:GetFunctionCodeSigningConfig",
       "lambda:AddPermission", "lambda:RemovePermission", "lambda:GetPolicy",
+    ]
+    resources = ["arn:aws:lambda:*:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-*"]
+  }
+
+  # Event source mapping actions apply to the mapping's own ARN (a UUID
+  # assigned at creation), not the function's, so they can't be pre-scoped.
+  statement {
+    sid    = "LambdaEventSourceMappings"
+    effect = "Allow"
+    actions = [
       "lambda:CreateEventSourceMapping", "lambda:DeleteEventSourceMapping",
       "lambda:GetEventSourceMapping", "lambda:UpdateEventSourceMapping",
       "lambda:ListEventSourceMappings",
     ]
-    resources = ["arn:aws:lambda:*:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-*"]
+    resources = ["*"]
   }
 
   statement {
@@ -192,9 +202,12 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
   }
 
   statement {
-    sid       = "ApiGateway"
-    effect    = "Allow"
-    actions   = ["apigateway:GET", "apigateway:POST", "apigateway:PUT", "apigateway:PATCH", "apigateway:DELETE"]
+    sid    = "ApiGateway"
+    effect = "Allow"
+    actions = [
+      "apigateway:GET", "apigateway:POST", "apigateway:PUT", "apigateway:PATCH", "apigateway:DELETE",
+      "apigateway:TagResource", "apigateway:UntagResource",
+    ]
     resources = ["arn:aws:apigateway:*::/apis", "arn:aws:apigateway:*::/apis/*", "arn:aws:apigateway:*::/tags/*"]
   }
 

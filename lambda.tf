@@ -33,6 +33,10 @@ module "lambda_http_api" {
     }
   }
 
+  # We don't publish versions, so there's no "current version" to scope a
+  # duplicate permission to; only the default $LATEST needs one.
+  create_current_version_allowed_triggers = false
+
   allowed_triggers = {
     http_api = {
       service    = "apigateway"
@@ -68,6 +72,8 @@ module "lambda_ws_connect" {
     }
   }
 
+  create_current_version_allowed_triggers = false
+
   allowed_triggers = {
     ws_api = {
       service    = "apigateway"
@@ -102,6 +108,8 @@ module "lambda_ws_disconnect" {
       resources = [module.connections_table.dynamodb_table_arn]
     }
   }
+
+  create_current_version_allowed_triggers = false
 
   allowed_triggers = {
     ws_api = {
