@@ -1,5 +1,12 @@
-# placeholder_src/ lets Terraform create these functions before real code exists;
-# ignore_source_code_hash stops it from overwriting what the app repo's CD deploys.
+# placeholder.zip (built from placeholder_src/, checked in as a static artifact,
+# never rebuilt automatically) lets Terraform create the function before real code
+# exists. Using local_existing_package instead of source_path keeps the computed
+# filename/hash stable across applies -- source_path rebuilds from the live
+# directory on every apply, and any change to that directory (even unrelated
+# files) changes the hash and triggers a real UpdateFunctionCode call, which the
+# infra role deliberately can't make (only the app repo's CD deploys code).
+# ignore_source_code_hash is still set so a rebuilt placeholder.zip never fights
+# the real code the app repo deploys.
 
 locals {
   lambda_runtime      = "python3.13"
@@ -17,7 +24,8 @@ module "lambda_http_api" {
   architectures = local.lambda_architecture
   timeout       = 10
 
-  source_path             = "${path.module}/placeholder_src"
+  create_package          = false
+  local_existing_package  = "${path.module}/placeholder.zip"
   ignore_source_code_hash = true
 
   environment_variables = {
