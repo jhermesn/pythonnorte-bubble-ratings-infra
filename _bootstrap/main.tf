@@ -110,7 +110,7 @@ data "aws_iam_policy_document" "infra_deploy_permissions" {
       "lambda:CreateFunction", "lambda:DeleteFunction", "lambda:GetFunction",
       "lambda:GetFunctionConfiguration", "lambda:UpdateFunctionConfiguration",
       "lambda:TagResource", "lambda:UntagResource", "lambda:ListTags",
-      "lambda:ListVersionsByFunction",
+      "lambda:ListVersionsByFunction", "lambda:GetFunctionCodeSigningConfig",
       "lambda:AddPermission", "lambda:RemovePermission", "lambda:GetPolicy",
       "lambda:CreateEventSourceMapping", "lambda:DeleteEventSourceMapping",
       "lambda:GetEventSourceMapping", "lambda:UpdateEventSourceMapping",
