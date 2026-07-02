@@ -1,4 +1,5 @@
 **/.terraform/
+**/builds/
 *.tfstate
 *.tfstate.*
 *.tfplan

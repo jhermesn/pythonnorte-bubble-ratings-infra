@@ -9,6 +9,12 @@ module "ws_api" {
 
   create_domain_name = false
 
+  # Required for WEBSOCKET APIs: the module's stage config errors without an
+  # explicit logging_level (no built-in default for this protocol type).
+  stage_default_route_settings = {
+    logging_level = "OFF"
+  }
+
   routes = {
     "$connect" = {
       integration = {
